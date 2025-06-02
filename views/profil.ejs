@@ -23,7 +23,14 @@
     <main>
         <h1>Mein Profil</h1>
 
-        Hier sollen alle persönlichen Daten des Kunden stehen.</br>
+    <ul>
+        <li><strong>Vorname:</strong> <%= Kunde.vorname %></li>
+        <li><strong>Nachname:</strong> <%= Kunde.nachname %></li>
+        <li><strong>Geburtsdatum:</strong> <%= Kunde.geburtsdatum %></li>
+        <li><strong>Adresse:</strong> <%= Kunde.adresse %></li>
+        <li><strong>Mail-Adresse:</strong> <%= Kunde.email %></li>
+        <li><strong>Telefonnummer:</strong> <%= kunde.Telefonnummer %></li>
+    </ul>
 
         <form method="post">            
             <label>Mail-Adresse</label></br>

@@ -311,42 +311,35 @@ app.get('/profil', (req, res) => {
 });
 
 app.post('/profil', (req, res) => {
-	
-	var meldung = "";
+    var meldung = "";
 
-	if(kunde.IstEingeloggt){
+    if(kunde.IstEingeloggt){
+        // E-Mail aktualisieren
+        let email = req.body.Email;
+        if(email && validator.validate(email)){
+            kunde.Mail = email;
+            meldung = "EMail-adresse gültig";
+        } else if(email) {
+            meldung = "EMail-adresse ungültig";
+        }
 
-		// Der Wert von Email wird vom Browser entgegengenommen, sobald der Kunde
-		// sein Profil ändern will.
+        // Telefonnummer aktualisieren
+        let telefonnummer = req.body.Telefonnummer;
+        if(telefonnummer){
+            kunde.Telefonnummer = telefonnummer;
+            meldung += " Telefonnummer geändert.";
+        }
 
-		let email = req.body.Email;
-		
-		// Die übergebene Adresse wird in die Validate-Funktion übergeben und geprüft
+        res.render('profil.ejs',{
+            Meldung: meldung,
+            kunde: kunde
+        });
 
-		if(validator.validate(email)){
-
-			console.log("Gültige EMail.")
-			meldung = "EMail-adresse gültig";
-			kunde.Mail = email;
-
-		}else{
-			console.log("Ungültige EMail.")
-			meldung = "EMail-adresse ungültig";
-		}
-		
-		// Die profil-Seite wird gerendert.
-		res.render('profil.ejs',{
-			Meldung: meldung,
-			Email: ""
-		});
-
-	}else{
-		
-		// Wenn die Zugangsdaten nicht korrekt sind, dann wird die login-Seite gerendert.
-		res.render('login.ejs',{
-			Meldung: "Melden Sie sich zuerst an."
-		});
-	}
+    }else{
+        res.render('login.ejs',{
+            Meldung: "Melden Sie sich zuerst an."
+        });
+    }
 });
 
 app.get('/postfach', (req, res) => {
@@ -377,28 +370,37 @@ app.get('/kreditBeantragen', (req, res) => {
 });
 
 
-// Kommentar: 
+// Wenn jemand ein Formular auf der Seite abschickt, dann soll diese Funktion ausgeführt werden.
 app.post('/kreditBeantragen', (req, res) => {
 
-	// Kommentar:
-	let zinsbetrag = req.body.Betrag;
-	let laufzeit = req.body.Laufzeit;
-	let zinssatz = req.body.Zinssatz;
+    // Die drei Variablen enthalten nach diesen Zeilen die vom Nutzer 
+    // eingegebenen Werte für Kreditbetrag, Laufzeit und Zinssatz, die dann weiterverarbeitet werden können.
+    let zinsbetrag = req.body.Betrag;
+    let laufzeit = req.body.Laufzeit;
+    let zinssatz = req.body.Zinssatz;
 
-	// Kommentar:
-	let kredit = zinsbetrag * Math.pow(1+zinssatz/100,laufzeit);
-	
-	// Kommentar:
-	console.log("Rückzahlungsbetrag: " + kredit + " €.")
+    // Der Ausdruck berechnet, wie viel der Kunde am Ende der Laufzeit 
+    // inklusive aller Zinsen zurückzahlen muss, wenn die Zinsen jährlich auf den Gesamtbetrag 
+    // aufgeschlagen werden (Zinseszins).
+    let kredit = zinsbetrag * Math.pow(1+zinssatz/100,laufzeit);
 
-	// Kommentar:
-	res.render('kreditBeantragen.ejs',{
-		Laufzeit: laufzeit,
-		Zinssatz: zinssatz,		
-		Betrag: zinsbetrag,
-		// Kommentar:
-		Meldung: "Rückzahlungsbetrag: " + kredit + " €."
-	});
+    // Ergebnis kaufmännisch runden (zwei Nachkommastellen, deutsche Schreibweise)
+    let kreditGerundet = Number(kredit).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Der aktuelle Rückzahlungsbetrag wird mit Text 
+    // und Währungseinheit als Information für den Entwickler oder Administrator auf der Server-Konsole angezeigt.
+    console.log("Rückzahlungsbetrag: " + kreditGerundet + " €.")
+
+    // Die Funktion rendert die Seite kreditBeantragen.ejs und übergibt 
+    // die aktuellen Werte für Laufzeit, Zinssatz und Betrag, damit sie im Browser angezeigt werden können.
+    res.render('kreditBeantragen.ejs',{
+        Laufzeit: laufzeit,
+        Zinssatz: zinssatz,		
+        Betrag: zinsbetrag,
+        // Der berechnete Rückzahlungsbetrag wird als Textnachricht an die 
+        // Webseite übergeben, damit der Nutzer ihn direkt im Browser sieht.
+        Meldung: "Rückzahlungsbetrag: " + kreditGerundet + " €."
+    });
 });
 
 app.get('/ueberweisungAusfuehren', (req, res) => {
@@ -549,7 +551,8 @@ app.post('/login', (req, res) => {
 		kunde.Strasse = row.Strasse;
 		kunde.Kennwort = row.Kennwort;
 		kunde.Benutzername = row.Benutzername;
-		
+		kunde.Telefonnummer = row.Telefonnummer;
+
 		console.log("Dieser Kunde wurde aus der Datenbank initialisiert: ", kunde);
 
 	});
